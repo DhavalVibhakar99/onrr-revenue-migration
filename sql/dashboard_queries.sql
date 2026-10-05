@@ -1,4 +1,4 @@
--- Catalog/schema: workspace.onrr_migration
+-- Catalog/schema : workspace.onrr_migration
 
 -- 1. Migration sign-off: latest reconciliation run
 SELECT check_id, check_name, source_value, target_value, variance, status
