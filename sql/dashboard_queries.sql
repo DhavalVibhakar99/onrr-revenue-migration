@@ -1,4 +1,3 @@
--- Paste each query into a Databricks AI/BI dashboard as its own dataset.
 -- Catalog/schema: workspace.onrr_migration
 
 -- 1. Migration sign-off: latest reconciliation run
