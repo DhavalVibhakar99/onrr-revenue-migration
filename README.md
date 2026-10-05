@@ -121,11 +121,6 @@ month against its trailing 12-month median and month-over-month change, and runs
 on those features. A month is flagged when the model and the robust z-score agree. Results go to
 `gold_revenue_anomalies`.
 
-## Mapping to SAP BODS
-
-The same steps map directly to SAP Data Services transforms (Validation, Table_Comparison,
-Key_Generation, audit points). See [`docs/SAP_BODS_mapping.md`](docs/SAP_BODS_mapping.md).
-
 ## Running it
 
 1. In Databricks, go to **Workspace → Create → Git folder** and add this repository.
