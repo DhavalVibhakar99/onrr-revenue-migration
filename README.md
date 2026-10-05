@@ -168,6 +168,14 @@ while the row-count checks on the landing tables and the reject-rate check corre
 
 ![Dashboard](docs/images/dashboard.png)
 
+**Natural-language queries (Databricks Genie)**
+
+A Genie space over the star schema lets non-technical users query the migrated data in plain English.
+Genie writes the SQL against the fact and dimension tables; the answer below can be checked against the
+dashboard.
+
+![Genie answer](docs/images/genie.png)
+
 **Summary query**
 
 ![Run summary](docs/images/run_summary.png)
