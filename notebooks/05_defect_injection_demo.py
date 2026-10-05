@@ -1,12 +1,12 @@
 # Databricks notebook source
 # MAGIC %md
-# MAGIC # 05 · Prove the reconciliation catches real migration defects
-# MAGIC A reconciliation that always says PASS proves nothing. Here we copy the fact table, break it
-# MAGIC the way real migrations break, and show which checks catch each defect:
+# MAGIC # 05 Defect injection test
+# MAGIC Copies the fact table, introduces four common migration defects and reruns the checks against the
+# MAGIC copy. Each defect should be caught by at least one check:
 # MAGIC
 # MAGIC | Defect injected | Expected to fail |
 # MAGIC |---|---|
-# MAGIC | 3 transactions dropped (e.g. a failed batch) | C03, C05, C07, C04 |
+# MAGIC | 3 transactions dropped (failed batch) | C03, C04, C05, C07 |
 # MAGIC | 1 amount changed by $0.01 (rounding / type bug) | C04, C05, C06 |
 # MAGIC | 1 duplicate row inserted (re-run without MERGE) | C03, C05, C08 |
 # MAGIC | 1 row pointed at a commodity key that doesn't exist | C09 |

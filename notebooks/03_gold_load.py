@@ -1,9 +1,9 @@
 # Databricks notebook source
 # MAGIC %md
-# MAGIC # 03 · Gold: load the target star schema with MERGE
-# MAGIC Dimensions get deterministic hash surrogate keys, so re-runs produce the same keys.
-# MAGIC The fact load is an idempotent `MERGE` (insert new, update changed amounts, delete rows that
-# MAGIC disappeared from source). Running this notebook twice changes nothing the second time.
+# MAGIC # 03 Gold load (target star schema)
+# MAGIC Dimension surrogate keys are hashes of the business attributes, so re-runs produce the same keys.
+# MAGIC The fact table is loaded with one `MERGE`: insert new rows, update changed amounts, delete rows no
+# MAGIC longer in the source. A second run makes no changes.
 
 # COMMAND ----------
 
@@ -88,5 +88,5 @@
 # COMMAND ----------
 
 # MAGIC %sql
-# MAGIC -- Delta keeps a full audit trail of every load (useful in interviews: "how do you roll back a bad load?")
+# MAGIC -- Load history (audit trail; supports RESTORE to a previous version)
 # MAGIC DESCRIBE HISTORY fact_revenue_txn

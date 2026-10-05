@@ -1,11 +1,10 @@
 # Databricks notebook source
 # MAGIC %md
-# MAGIC # 00 · Config
-# MAGIC Shared settings. Every other notebook starts with `%run ./00_config`.
+# MAGIC # 00 Config
+# MAGIC Shared settings, loaded by every other notebook with `%run ./00_config`.
 # MAGIC
-# MAGIC **Data source:** U.S. Department of the Interior, Office of Natural Resources Revenue (ONRR),
-# MAGIC *Monthly revenue* dataset: royalties, rents, bonuses and penalties paid on oil, gas, coal and other
-# MAGIC leases on federal and Native American lands, Jan 2003 to present.
+# MAGIC **Source:** ONRR Monthly Revenue (U.S. Department of the Interior). Royalties, rents, bonuses and
+# MAGIC other revenue on federal and Native American leases, January 2003 to present.
 
 # COMMAND ----------
 
@@ -25,8 +24,8 @@ spark.sql(f"CREATE VOLUME IF NOT EXISTS {CATALOG}.{SCHEMA}.{VOLUME}")
 spark.sql(f"USE CATALOG {CATALOG}")
 spark.sql(f"USE SCHEMA {SCHEMA}")
 
-# Same parsing rule used by silver AND by the independent reconciliation re-read,
-# so "source" and "target" totals are computed the same way.
+# Amount parsing rule shared by the staging load and the reconciliation re-read,
+# so source and target totals are computed the same way.
 REVENUE_PARSE_SQL = """
 try_cast(
   CASE WHEN left(trim({c}), 1) = '(' THEN concat('-', regexp_replace({c}, '[()$, ]', ''))

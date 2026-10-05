@@ -1,61 +1,138 @@
-# Oil & Gas Revenue Migration with Reconciliation (Databricks)
+# ONRR Revenue Data Migration (Databricks, Delta Lake)
 
-Migrates 20+ years of U.S. federal oil, gas and mineral revenue transactions (royalties, rents,
-bonuses, penalties) from a legacy flat-file extract into a Delta Lake star schema on Databricks,
-with rule-based validation, an idempotent MERGE load, automated source-to-target reconciliation,
-and AI anomaly detection on the migrated data.
+Migration of U.S. federal oil, gas and mineral revenue transactions from a flat-file extract into a
+Delta Lake star schema, with row-level validation, an idempotent MERGE load and a source-to-target
+reconciliation that must pass before the load is signed off.
 
-**Data:** [ONRR Monthly Revenue](https://revenuedata.doi.gov/downloads/revenue/), U.S. Department of
-the Interior, Office of Natural Resources Revenue. Public, real, Jan 2003 to present.
+The source is the Office of Natural Resources Revenue (ONRR) monthly revenue file: royalties, rents,
+bonuses and other revenue collected on federal and Native American leases, January 2003 to present.
+It is public data, published by the U.S. Department of the Interior at
+[revenuedata.onrr.gov](https://revenuedata.onrr.gov/downloads/revenue/).
 
-## Architecture
+## Scope
+
+| | |
+|---|---|
+| Source | `monthly_revenue.csv`, one row per month, location, revenue type and commodity |
+| Target | Delta tables in `workspace.onrr_migration` (Unity Catalog) |
+| Platform | Databricks Free Edition, serverless compute, PySpark and Spark SQL |
+| Orchestration | Databricks job: ingest → validate → load → reconcile |
+| Reporting | Databricks AI/BI dashboard (`sql/dashboard_queries.sql`) |
+
+## Pipeline
+
+The layers follow the Databricks medallion convention (bronze, silver, gold). In migration terms
+they are the landing, staging and target areas.
 
 ```
-monthly_revenue.csv (legacy extract)
-        │  01 land as-is + audit columns (row hash, source row id)
-        ▼
-bronze_monthly_revenue  ── all strings, nothing changed
-        │  02 type, cleanse, validate (reason codes V001–V005)
-        ├──────────────► silver_revenue_rejects   (failed rows + reasons)
-        ▼
-silver_revenue_txn
-        │  03 hash surrogate keys + MERGE (insert / update / delete)
-        ▼
-fact_revenue_txn ── dim_date (fiscal year) · dim_location · dim_commodity · dim_revenue_type
-        │
-        ├── 04 reconciliation gate → recon_results (fails the job on any variance)
-        ├── 05 defect injection demo (proves the checks catch real errors)
-        └── 06 AI anomaly detection → gold_revenue_anomalies
+monthly_revenue.csv
+   │
+   │ 01  Land the extract unchanged, add audit columns
+   ▼
+bronze_monthly_revenue            landing: all columns as text, row hash, source row id
+   │
+   │ 02  Type, cleanse and validate
+   ├─────────────► silver_revenue_rejects   rows that failed a rule, with reason codes
+   ▼
+silver_revenue_txn                staging: typed and standardised
+   │
+   │ 03  Build dimensions, MERGE the fact table
+   ▼
+fact_revenue_txn                  target star schema
+   ├── dim_date          (federal fiscal year, Oct to Sep)
+   ├── dim_location
+   ├── dim_commodity
+   └── dim_revenue_type
+   │
+   │ 04  Reconcile source to target, fail the job on any variance
+   ▼
+recon_results
 ```
 
-## Reconciliation checks
+| Notebook | Purpose |
+|---|---|
+| `00_config` | Catalog, schema, file path and the shared amount-parsing rule |
+| `00_recon_lib` | Reconciliation checks, used by 04 and 05 |
+| `01_bronze_ingest` | Load the CSV as-is with audit columns |
+| `02_silver_validate` | Data typing, validation rules, reject routing |
+| `03_gold_load` | Dimension loads and the fact `MERGE` |
+| `04_reconciliation` | Sign-off checks; raises an error if any check fails |
+| `05_defect_injection_demo` | Breaks a copy of the fact table to confirm the checks detect each defect |
+| `06_ai_anomaly_detection` | Flags unusual monthly revenue for analyst review (Isolation Forest) |
+
+## Validation rules
+
+Every landed row ends up in exactly one of the two staging tables. Nothing is dropped without a reason.
+
+| Code | Rule | Action |
+|---|---|---|
+| V001 | Date cannot be parsed | Reject |
+| V002 | Revenue amount is not numeric | Reject |
+| V003 | Revenue type missing | Reject |
+| V004 | Land class missing | Reject |
+| V005 | Date in the future | Reject |
+| D001 | Commodity or product blank | Default to `Not Applicable` |
+| W001 | Exact duplicate source row | Flag only; aggregated rows can repeat legitimately |
+
+## Load design
+
+- Dimension surrogate keys are hashes of the business attributes, so a re-run produces the same keys.
+- The fact table is loaded with a single `MERGE`: new rows are inserted, changed amounts are updated
+  and rows no longer in the source are deleted. Running the load twice changes nothing.
+- Each fact row carries a `txn_id` (content hash plus occurrence number) and the source row id, so any
+  target row can be traced back to the extract.
+- Delta table history records every load and allows a rollback to a previous version.
+
+## Reconciliation
+
+The source side of the reconciliation re-reads the raw file directly rather than the landing table,
+so an ingestion error cannot hide itself.
 
 | ID | Check |
 |---|---|
-| C01 | Row count: source file vs bronze (independent re-read of the file) |
-| C02 | Row count: bronze = silver valid + rejects (nothing silently dropped) |
-| C03 | Row count: silver valid vs fact |
+| C01 | Row count: source file vs landing table |
+| C02 | Row count: landing = valid + rejected |
+| C03 | Row count: valid staging rows vs fact table |
 | C04 | Revenue total: source file vs fact + rejected amounts |
-| C05 | Revenue total: silver valid vs fact |
-| C06 | Revenue by fiscal year × revenue type: zero groups with a variance |
-| C07 / C08 | Key level: no source transaction missing, no extra target transaction |
-| C09 | Referential integrity: every fact row joins to every dimension |
-| C10 | Reject rate under 1% |
+| C05 | Revenue total: valid staging rows vs fact table |
+| C06 | Revenue by fiscal year and revenue type: no group with a variance |
+| C07 | No source transaction missing from the target |
+| C08 | No target transaction that is not in the source |
+| C09 | Every fact row joins to all four dimensions |
+| C10 | Reject rate below 1% |
 
-## Run it (Databricks Free Edition)
+Results are appended to `recon_results` with a run id, so every sign-off is kept.
 
-1. Sign up for **Databricks Free Edition** (free, no credit card).
-2. Push this folder to a GitHub repo. In Databricks: **Workspace → Create → Git folder**, paste the repo URL.
-   (Or import each file in `notebooks/` via **Workspace → Import**.)
-3. Open `01_bronze_ingest` and run the first two cells. The first creates the schema and volume; the
-   second tries to download the data. If it says the download failed: download
-   `monthly_revenue.csv` from the ONRR link above in your browser, then in Databricks go to
-   **Catalog → workspace → onrr_migration → raw → Upload to this volume**.
-4. Run notebooks `01` → `02` → `03` → `04` → `05` → `06` in order.
-5. Build a dashboard from `sql/dashboard_queries.sql` (**New → Dashboard**). Screenshot it and the
-   `04` results for the README.
-6. Optional: **Jobs & Pipelines → Create job** with tasks 01→02→03→04 chained, to show orchestration.
+Notebook 05 copies the fact table, introduces four common migration defects (dropped rows, a one-cent
+amount change, a duplicated row and a broken foreign key) and reruns the checks against the copy.
 
-## SAP BODS
+| Defect | Checks expected to fail |
+|---|---|
+| 3 transactions dropped | C03, C04, C05, C07 |
+| One amount changed by $0.01 | C04, C05, C06 |
+| One duplicate row | C03, C05, C08 |
+| One invalid commodity key | C09 |
 
-See [`docs/SAP_BODS_mapping.md`](docs/SAP_BODS_mapping.md) for how every step maps to BODS transforms.
+## Anomaly detection
+
+Reconciliation confirms the data moved correctly; it does not say whether the numbers make sense.
+Notebook 06 builds monthly series for the largest commodity and revenue type combinations, scores each
+month against its trailing 12-month median and month-over-month change, and runs an Isolation Forest
+on those features. A month is flagged when the model and the robust z-score agree. Results go to
+`gold_revenue_anomalies`.
+
+## Mapping to SAP BODS
+
+The same steps map directly to SAP Data Services transforms (Validation, Table_Comparison,
+Key_Generation, audit points). See [`docs/SAP_BODS_mapping.md`](docs/SAP_BODS_mapping.md).
+
+## Running it
+
+1. In Databricks, go to **Workspace → Create → Git folder** and add this repository.
+2. Open `notebooks/01_bronze_ingest`, attach serverless compute and run it. It creates the schema and
+   volume and tries to download the file. If outbound access is blocked, download
+   `monthly_revenue.csv` from the ONRR link above and upload it to
+   **Catalog → workspace → onrr_migration → raw**.
+3. Run notebooks 02 to 06 in order.
+4. Optionally, create a job with tasks 01 → 02 → 03 → 04 and build the dashboard from
+   `sql/dashboard_queries.sql`.

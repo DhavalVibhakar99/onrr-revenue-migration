@@ -1,11 +1,11 @@
 # Databricks notebook source
 # MAGIC %md
-# MAGIC # 02 · Silver: type, cleanse, validate
-# MAGIC Every bronze row ends up in **exactly one** of two tables:
+# MAGIC # 02 Silver validation (staging)
+# MAGIC Each landed row is written to exactly one of two tables:
 # MAGIC * `silver_revenue_txn`: passed validation, typed, standardised
 # MAGIC * `silver_revenue_rejects`: failed at least one rule, with reason codes
 # MAGIC
-# MAGIC Nothing is silently dropped. That invariant is what makes reconciliation possible.
+# MAGIC No row is dropped without a reason code, which is what allows the reconciliation in notebook 04.
 # MAGIC
 # MAGIC | Code | Rule | Action |
 # MAGIC |---|---|---|

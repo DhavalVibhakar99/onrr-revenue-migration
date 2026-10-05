@@ -1,14 +1,14 @@
 # Databricks notebook source
 # MAGIC %md
-# MAGIC # 00 · Reconciliation library
-# MAGIC `run_reconciliation(fact_table)` compares source to target at four levels:
+# MAGIC # 00 Reconciliation library
+# MAGIC `run_reconciliation(fact_table)` compares source and target at four levels:
 # MAGIC 1. **Row counts**: file → bronze → (silver valid + rejects) → fact
 # MAGIC 2. **Control totals**: total revenue, and revenue by fiscal year × revenue type
 # MAGIC 3. **Key level**: every valid source transaction is in the target and nothing extra is
 # MAGIC 4. **Referential integrity**: every fact row joins to every dimension
 # MAGIC
-# MAGIC The source side is an **independent re-read of the raw file**, not the bronze table, so a bug in
-# MAGIC ingestion can't hide itself.
+# MAGIC The source side re-reads the raw file rather than the bronze table, so an ingestion error is not
+# MAGIC carried into both sides of the comparison.
 
 # COMMAND ----------
 
@@ -31,7 +31,7 @@ def run_reconciliation(fact_table="fact_revenue_txn", reject_rate_limit=0.01):
         status = "PASS" if abs(variance) <= tolerance else "FAIL"
         results.append((run_id, run_ts, cid, name, str(src), str(tgt), str(variance), status))
 
-    # --- independent source read ---------------------------------------------------
+    # Source side: re-read the raw file
     src = spark.read.option("header", True).option("multiLine", True).option("escape", '"').csv(RAW_FILE)
     src = src.toDF(*[_snake(c) for c in src.columns])
     src.createOrReplaceTempView("v_recon_source")

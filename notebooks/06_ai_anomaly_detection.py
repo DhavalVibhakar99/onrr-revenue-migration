@@ -1,9 +1,8 @@
 # Databricks notebook source
 # MAGIC %md
-# MAGIC # 06 · AI: flag unusual monthly revenue for review
-# MAGIC Reconciliation proves the data moved correctly. This notebook asks a different question:
-# MAGIC **does any of the migrated data look wrong in a business sense?** (a royalty month that is 10x
-# MAGIC normal, a sudden collapse, a sign flip). Those are the rows a finance analyst would want to see first.
+# MAGIC # 06 Anomaly detection
+# MAGIC Reconciliation confirms the data moved correctly. This notebook flags months whose values look
+# MAGIC unusual for review, such as a large spike, a sudden drop or a sign change.
 # MAGIC
 # MAGIC Method, per commodity × revenue type monthly series:
 # MAGIC * robust z-score against the trailing 12-month median (resistant to outliers)
@@ -69,7 +68,7 @@ display(anomalies.head(20))
 # COMMAND ----------
 
 # MAGIC %sql
-# MAGIC -- Plot this as a line chart (month_start vs revenue), colour by is_anomaly
+# MAGIC -- Line chart: month_start vs revenue, coloured by is_anomaly
 # MAGIC SELECT month_start, revenue, is_anomaly
 # MAGIC FROM gold_revenue_anomalies
 # MAGIC WHERE commodity = 'Oil' AND revenue_type = 'Royalties'

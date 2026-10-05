@@ -1,9 +1,8 @@
 # Databricks notebook source
 # MAGIC %md
-# MAGIC # 01 · Bronze: land the legacy extract as-is
-# MAGIC Rule of a financial migration: **land every source row unchanged** before transforming anything.
-# MAGIC All columns stay as strings; we add audit columns (source file, load time, row hash, source row id)
-# MAGIC so any target row can be traced back to its exact source row.
+# MAGIC # 01 Bronze ingest (landing)
+# MAGIC Loads every source row unchanged, with all columns as text. Audit columns (source file, load time,
+# MAGIC row hash, source row id) allow any target row to be traced back to its source row.
 
 # COMMAND ----------
 
@@ -11,8 +10,8 @@
 
 # COMMAND ----------
 
-# Optional: try to pull the file straight from ONRR. If outbound internet is blocked in your
-# workspace, upload monthly_revenue.csv to the volume by hand (README step 3) and skip this cell.
+# Download the file from ONRR if it is not already in the volume. If outbound access is blocked,
+# upload monthly_revenue.csv to the volume manually (see README).
 import os, urllib.request
 SRC_URL = "https://revenuedata.onrr.gov/downloads/monthly_revenue.csv"   # site moved from revenuedata.doi.gov
 if not os.path.exists(RAW_FILE):
@@ -63,7 +62,7 @@ print(f"Bronze rows: {spark.table('bronze_monthly_revenue').count():,}")
 
 # COMMAND ----------
 
-# MAGIC %md ### Quick profile of the legacy data (look for surprises before writing rules)
+# MAGIC %md ### Source profile
 
 # COMMAND ----------
 
