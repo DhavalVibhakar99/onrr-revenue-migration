@@ -164,6 +164,10 @@ while the row-count checks on the landing tables and the reject-rate check corre
 
 ![Job run](docs/images/job_run.png)
 
+**AI/BI dashboard**
+
+![Dashboard](docs/images/dashboard.png)
+
 **Summary query**
 
 ![Run summary](docs/images/run_summary.png)
