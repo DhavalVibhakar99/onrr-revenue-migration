@@ -14,7 +14,7 @@
 # Optional: try to pull the file straight from ONRR. If outbound internet is blocked in your
 # workspace, upload monthly_revenue.csv to the volume by hand (README step 3) and skip this cell.
 import os, urllib.request
-SRC_URL = "https://revenuedata.doi.gov/downloads/monthly_revenue.csv"
+SRC_URL = "https://revenuedata.onrr.gov/downloads/monthly_revenue.csv"   # site moved from revenuedata.doi.gov
 if not os.path.exists(RAW_FILE):
     try:
         urllib.request.urlretrieve(SRC_URL, RAW_FILE)

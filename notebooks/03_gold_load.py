@@ -54,8 +54,8 @@
 # MAGIC        year(d) AS calendar_year,
 # MAGIC        quarter(d) AS calendar_quarter,
 # MAGIC        CASE WHEN month(d) >= 10 THEN year(d) + 1 ELSE year(d) END AS fiscal_year
-# MAGIC FROM (SELECT explode(sequence(min(revenue_date), max(revenue_date), interval 1 day)) AS d
-# MAGIC       FROM silver_revenue_txn)
+# MAGIC FROM (SELECT explode(sequence(min_d, max_d, interval 1 day)) AS d
+# MAGIC       FROM (SELECT min(revenue_date) AS min_d, max(revenue_date) AS max_d FROM silver_revenue_txn))
 
 # COMMAND ----------
 
