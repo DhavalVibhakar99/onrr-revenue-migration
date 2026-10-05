@@ -140,6 +140,10 @@ January 2003 to August 2026.
 The source file contained no rows that failed a validation rule, so the reject table is empty. The
 defect-injection run in notebook 05 is what confirms the checks detect errors.
 
+**Reconciliation sign-off (notebook 04)**
+
+![Reconciliation checks](docs/images/reconciliation_checks.png)
+
 **Job run (01 → 02 → 03 → 04)**
 
 ![Job run](docs/images/job_run.png)
