@@ -142,6 +142,7 @@ January 2003 to August 2026.
 | Revenue reconciled, source to target | $297,545,130,277.43 |
 | Location / commodity dimension rows | 766 / 192 |
 | Reconciliation checks passed | 10 of 10 |
+| Tie-out to ONRR published fiscal-year totals (C11) | 199 of 199 groups matched, FY2004–2025, net variance $0.00 |
 | Months flagged for review (notebook 06) | 78 of 3,882 series-months |
 | Scheduled job, ingest to reconcile | 4 tasks, 2 min 46 s |
 
