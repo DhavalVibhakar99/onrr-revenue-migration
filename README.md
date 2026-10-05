@@ -121,6 +121,33 @@ month against its trailing 12-month median and month-over-month change, and runs
 on those features. A month is flagged when the model and the robust z-score agree. Results go to
 `gold_revenue_anomalies`.
 
+## Results
+
+Run on Databricks Free Edition (serverless), October 2026, against the ONRR file covering
+January 2003 to August 2026.
+
+| Measure | Value |
+|---|---|
+| Source rows | 413,554 |
+| Rows loaded to `fact_revenue_txn` | 413,554 |
+| Rows rejected by validation | 0 |
+| Revenue reconciled, source to target | $297,545,130,277.43 |
+| Location / commodity dimension rows | 766 / 192 |
+| Reconciliation checks passed | 10 of 10 |
+| Months flagged for review (notebook 06) | 78 of 3,882 series-months |
+| Scheduled job, ingest to reconcile | 4 tasks, 2 min 46 s |
+
+The source file contained no rows that failed a validation rule, so the reject table is empty. The
+defect-injection run in notebook 05 is what confirms the checks detect errors.
+
+**Job run (01 → 02 → 03 → 04)**
+
+![Job run](docs/images/job_run.png)
+
+**Summary query**
+
+![Run summary](docs/images/run_summary.png)
+
 ## Running it
 
 1. In Databricks, go to **Workspace → Create → Git folder** and add this repository.
