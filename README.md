@@ -180,13 +180,4 @@ dashboard.
 
 ![Run summary](docs/images/run_summary.png)
 
-## Running it
 
-1. In Databricks, go to **Workspace → Create → Git folder** and add this repository.
-2. Open `notebooks/01_bronze_ingest`, attach serverless compute and run it. It creates the schema and
-   volume and tries to download the file. If outbound access is blocked, download
-   `monthly_revenue.csv` from the ONRR link above and upload it to
-   **Catalog → workspace → onrr_migration → raw**.
-3. Run notebooks 02 to 06 in order.
-4. Optionally, create a job with tasks 01 → 02 → 03 → 04 and build the dashboard from
-   `sql/dashboard_queries.sql`.
