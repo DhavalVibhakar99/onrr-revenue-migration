@@ -59,6 +59,7 @@ recon_results
 | `04_reconciliation` | Sign-off checks; raises an error if any check fails |
 | `05_defect_injection_demo` | Breaks a copy of the fact table to confirm the checks detect each defect |
 | `06_ai_anomaly_detection` | Flags unusual monthly revenue for analyst review (Isolation Forest) |
+| `07_tieout_published_totals` | Ties migrated totals out to ONRR's separately published fiscal-year file (check C11) |
 
 ## Validation rules
 
@@ -102,6 +103,13 @@ so an ingestion error cannot hide itself.
 | C10 | Reject rate below 1% |
 
 Results are appended to `recon_results` with a run id, so every sign-off is kept.
+
+A further check, C11 (notebook 07), compares migrated totals by fiscal year, land class and revenue type
+with the fiscal-year file ONRR publishes separately. This is an independent tie-out to the source
+system's own reporting rather than to the extract.
+
+The full field-level mapping, transformation rules and validation codes are in
+[`docs/source_to_target_mapping.md`](docs/source_to_target_mapping.md).
 
 Notebook 05 copies the fact table, introduces four common migration defects (dropped rows, a one-cent
 amount change, a duplicated row and a broken foreign key) and reruns the checks against the copy.
