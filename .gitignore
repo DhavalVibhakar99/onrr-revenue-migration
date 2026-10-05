@@ -1,0 +1,4 @@
+.DS_Store
+__pycache__/
+*.csv
+docs/resume_and_interview.md
