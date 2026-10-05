@@ -144,6 +144,13 @@ defect-injection run in notebook 05 is what confirms the checks detect errors.
 
 ![Reconciliation checks](docs/images/reconciliation_checks.png)
 
+**Defect injection (notebook 05)**
+
+All four injected defects were detected: 7 of the 10 checks failed against the broken copy (C03 to C09),
+while the row-count checks on the landing tables and the reject-rate check correctly still passed.
+
+![Defect injection results](docs/images/defect_injection.png)
+
 **Job run (01 → 02 → 03 → 04)**
 
 ![Job run](docs/images/job_run.png)
